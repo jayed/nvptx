@@ -1,0 +1,28 @@
+dist: trusty
+language: rust
+rust: nightly
+services: docker
+sudo: required
+
+install:
+  - sh ci/install.sh
+  - source ~/.cargo/env || true
+  - rustup component add rust-src
+
+script:
+  - bash ci/script.sh
+
+cache: cargo
+before_cache:
+  # Travis can't cache files that are not readable by "others"
+  - chmod -R a+r $HOME/.cargo
+
+branches:
+  only:
+    # release tags
+    - /^v\d+\.\d+\.\d+.*$/
+    - master
+
+notifications:
+  email:
+    on_success: never
