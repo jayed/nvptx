@@ -13,3 +13,5 @@ main() {
         cat $(find kernel/target/$target/release -name '*.s')
     done
 }
+
+main
