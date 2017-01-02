@@ -8,7 +8,7 @@ main() {
         sh -s -- \
            --force \
            --git japaric/xargo \
-           --tag v0.1.3 \
+           --tag v0.3.0 \
            --target x86_64-unknown-linux-gnu
 }
 
