@@ -1,3 +1,14 @@
+# Status
+
+This documentation about an unstable feature is **UNMAINTAINED** and was written
+over a year ago. Things may have drastically changed since then; read this at
+your own risk! If you are interested in modern Rust on GPU development check out
+https://github.com/rust-cuda/wg
+
+-- @japaric, 2018-12-08
+
+---
+
 # `nvptx`
 
 > How to: Run Rust code on your NVIDIA GPU
@@ -15,15 +26,21 @@
 
 ## First steps
 
-**HEADS UP** Due to
-[rust-lang/rust#38824](https://github.com/rust-lang/rust/issues/38824), no
-nightly release available to date (2017-03-10) can generate PTX code. You'll
-have to build your own compiler with LLVM assertions disabled.
+Since 2016-12-31, `rustc` can compile Rust code to PTX (Parallel Thread
+Execution) code, which is like GPU assembly, via `--emit=asm` and the right
+`--target` argument. This PTX code can then be loaded and executed on a GPU.
 
-Since 2016-12-31, `rustc` can compile can compile Rust code to PTX (Parallel
-Thread Execution) code, which is like GPU assembly, via `--emit=asm` and the
-right `--target` argument. This PTX code can then be loaded and executed on a
-GPU.
+*However*, a few days later 128-bit integer support landed in rustc and
+broke compilation of the `core` crate for NVPTX targets (LLVM assertions).
+Furthermore, there was no nightly release between these two events so it was not
+possible to use the NVPTX backend with a nightly compiler.
+
+Just recently (2017-05-18) I realized (thanks to [this blog post]) that we can
+work around the problem by compiling a *fork* of the core crate that doesn't
+contain code that involves 128-bit integers. Which is a bit unfortunate but,
+hey, if it works then it works.
+
+[this blog post]: https://gergo.erdi.hu/blog/2017-05-12-rust_on_avr__beyond_blinking/
 
 ### Targets
 
@@ -66,6 +83,12 @@ OK
 # Install it if you don't already have it
 $ cargo install xargo || true
 
+# Then instruct Xargo to compile a fork of the core crate that contains no
+# 128-bit integers
+$ edit Xargo.toml && cat Xargo.toml
+[dependencies.core]
+git = "https://github.com/japaric/core64"
+
 # Xargo has the exact same CLI as Cargo
 $ xargo rustc --target nvptx64-nvidia-cuda -- --emit=asm
    Compiling core v0.0.0 (file://$SYSROOT/lib/rustlib/src/rust/src/libcore)
@@ -106,7 +129,7 @@ function. Only *global* functions (AKA kernels) can be launched by the hosts.
 
 To turn `foo` into a global function, its ABI must be changed to "ptx-kernel":
 
-```
+``` rust
 #![feature(abi_ptx)]
 #![no_std]
 
@@ -225,7 +248,7 @@ $ find kernel/target -name '*.s'
 kernel/target/nvptx64-nvidia-cuda/release/deps/kernel-bb52137592af9c8c.s
 ```
 
-The [`example`](example) directory contains the "host" code. Inside that
+The [`examples`](examples) directory contains the "host" code. Inside that
 directory, there are 3 file; each file is an example program:
 
 - `add` - Add two (mathematical) vectors on the GPU
@@ -271,7 +294,7 @@ RGBA -> grayscale on the CPU
 If you encounter any problem with the Rust -> PTX feature in the compiler,
 report it to [this meta issue].
 
-[this meta issue]: TODO
+[this meta issue]: https://github.com/rust-lang/rust/issues/38789
 
 ## License
 
